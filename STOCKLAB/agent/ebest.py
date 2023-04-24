@@ -2,6 +2,9 @@ import win32com.client
 import pythoncom
 import configparser
 import time
+from datetime import datetime
+import os
+ 
 
 class XASession:
     #로그인 상태를 확인하기 위한 클래스변수
@@ -25,6 +28,17 @@ class XASession:
         print("Session disconntected")
         XASession.login_state = 0
 
+class XAQuery:
+    RES_PATH ="C:\\eBEST\\xingAPI\\Res\\"
+    tr_run_state = 0
+
+    def OnReceiveData(self, code):
+        print("OnReceiveData", code)
+        XAQuery.tr_run_state = 1
+
+    def OnReceiveMessage(self, error, code, message):
+        print("OnReceiveMessage", error, code, message, XAQuery.tr_run_state)
+
 class EBest:
     QUERY_LIMIT_10MIN = 200
     LIMIT_SECONDS = 600 #10min
@@ -35,12 +49,14 @@ class EBest:
         :param mode:str - 모의서버는 DEMO 실서버는 PROD로 구분
     """
     def __init__(self, mode = None):
+        thisfolder = os.path.dirname(os.path.abspath(__file__))
+        initfile = os.path.join(thisfolder, 'conf.ini')
         if mode not in ["PROD", "DEMO"]:
             raise Exception("Need to run_mode[PROD, DEMO]")
         run_mode = "EBEST_" + mode
         config = configparser.ConfigParser()
-        config.read('./conf/config.ini')
-        print(config[run_mode])
+        config.read(initfile)
+        print(config.get(run_mode, 'user'))
         self.user = config[run_mode]['user']
         self.passwd = config[run_mode]['password']
         self.cert_passwd = config[run_mode]['cert_passwd']
